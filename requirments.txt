@@ -1,0 +1,11 @@
+asgiref==3.3.1
+bleach==3.3.0
+Django==3.1.7
+djangorestframework==3.12.4
+drf-api-logger==1.0.5
+packaging==20.9
+pyparsing==2.4.7
+pytz==2021.1
+six==1.15.0
+sqlparse==0.4.1
+webencodings==0.5.1
