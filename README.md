@@ -23,7 +23,7 @@ pip3 install virtualenv #if using linux(for python 3 and above)
 ## Installation
 
 ```bash
-git clone https://github.com/ongraphpythondev/Assignment.git
+git clone https://github.com/ongraphpythondev/CRUD_Application.git
 
 cd CRUD_Application
 
