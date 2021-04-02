@@ -37,7 +37,7 @@ venv\Scripts\activate # for windows
 source venv/bin/activate # for linux
 
 # install required packages for the project to run
-pip install -r requirements.txt
+pip install -r requirments.txt
 python manage.py migrate
 ```
 
