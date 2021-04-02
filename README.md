@@ -25,7 +25,8 @@ pip3 install virtualenv #if using linux(for python 3 and above)
 ```bash
 git clone https://github.com/ongraphpythondev/Assignment.git
 
-cd cojo
+cd CRUD_Application
+cd CRUD_Application
 
 virtualenv venv
       or
