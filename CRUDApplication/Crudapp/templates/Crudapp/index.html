@@ -61,7 +61,40 @@
                </table>
             </div>
          </section>
-<section class="issues_feils_sctn">
+          <!--Pagination-->
+      <nav aria-label="Page navigation example">
+    <ul style="padding-left: 39px;" class="pagination justify-content-start mt-3">
+    {% if not user.has_previous%}
+    <li class="page-item disabled">
+        <a class="page-link" href="#" tabindex="-1">Previous</a>
+    </li>
+    {% endif %}
+    {% if user.has_previous%}
+      <li class="page-item">
+        <a class="page-link" href="?page={{user.previous_page_number}}" tabindex="-1">Previous</a>
+      </li>
+    {% endif %}
+      {% if user.has_previous%}
+      <li class="page-item"><a class="page-link" href="?page={{user.previous_page_number}}">{{user.previous_page_number}}</a></li>
+      {% endif %}
+      <li class="page-item"><a class="page-link" href="#">{{user.number}}</a></li>
+      {% if user.has_next%}
+      <li class="page-item"><a class="page-link" href="?page={{user.next_page_number}}">{{user.next_page_number}}</a></li>
+      {% endif %}
+      {% if user.has_next%}
+      <li class="page-item">
+        <a class="page-link" href="?page={{user.next_page_number}}">Next</a>
+      </li>
+      {% endif %}
+      {% if not user.has_next%}
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+  </nav>
+      <!--end of Pagination-->
+        <section class="issues_feils_sctn">
             <div class="cstm_container">
 
                <div class="issues_wrap width100">
@@ -111,9 +144,8 @@
             </section>
 
       </div>
-          <script src="{% static '/js/jquery.min.js' %}"></script>
-
-     <script src="{% static '/js/bootstrap.min.js' %}"></script>
+      <script src="{% static '/js/jquery.min.js' %}"></script>
+      <script src="{% static '/js/bootstrap.min.js' %}"></script>
       <script src=" https://code.jquery.com/jquery-3.5.1.js"></script>
       <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
       <script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap.min.js"></script>
@@ -133,10 +165,11 @@
       </script>
       <script type="text/javascript">
          $(document).ready(function() {
-    $('#example').DataTable();
-} );
+            $('#example').DataTable(
+            {"bPaginate": false});
+        } );
       </script>
-       <script>
+      <script>
          $(document).ready(function(){
            $(".mob_toggle").click(function(){
              $(".head_nav").toggleClass("active");
@@ -155,7 +188,7 @@
 		  $("#demo").html('User Id:<input type="text" id="user_id_delete" class="form-control" placeholder="User Id"><br/><button name="DELETE" id="DELETE" onclick="onDELETE(this)" class="btn btn-success">Submit</button>');
 		}
      </script>
-  <script>
+      <script>
   // Ajax functions
             function getCookie(name) {
               var cookieValue = null;
@@ -184,20 +217,21 @@
                                         }
                                     }
                                    });
-                        var url = $("#demo").attr("data-cities-url");
-
+                        var url = '/edit/';
                        $.ajax({
-                                url: `${url}`,
+                                url: `${url}${id}/`,
                                 "type": e.id,
                                 "beforeSend": function(xhr, settings) {
                                     $.ajaxSettings.beforeSend(xhr, settings);
                                  },
                                  "data":{'id':id,'method':e.id},
                                  success: function (data) {
-                                document.getElementById("demo2").innerHTML=JSON.stringify(data.data);
+                                 console.log(data);
+                                document.getElementById("demo2").innerHTML=JSON.stringify(data);
                                  },
                                  error: function (data) {
-                                document.getElementById("demo2").innerHTML=data.responseJSON.message;
+                                 console.log(data);
+                                document.getElementById("demo2").innerHTML=data.responseJSON.detail;
                                  },
 
 
@@ -215,19 +249,21 @@
                                         }
                                     }
                                    });
-                        var url = $("#demo").attr("data-cities-url");
+                        var url = '/edit/';
                        $.ajax({
-                                url: url,
+                                url: `${url}${id}/`,
                                 "type": e.id,
                                 "beforeSend": function(xhr, settings) {
                                     $.ajaxSettings.beforeSend(xhr, settings);
                                  },
                                  "data":{'id':id,'method':e.id},
                                  success: function (data) {
-                                document.getElementById("demo2").innerHTML=data.message;
+                                 console.log(data,'---');
+                                document.getElementById("demo2").innerHTML='Successfully Deleted';
                                  },
                                  error: function (data) {
-                                document.getElementById("demo2").innerHTML=data.responseJSON.message;
+                                 console.log(data);
+                                document.getElementById("demo2").innerHTML=data.responseJSON.detail;
                                  },
 
 
@@ -260,9 +296,11 @@
                                  },
                                  "data":{'method':e.id,'username':uname,'first_name':fname,'last_name':lname,'email':email,'password1':password11,'password2':password22},
                                  success: function (data) {
+                                  console.log(data);
                                 document.getElementById("demo2").innerHTML=JSON.stringify(data.data);
                                  },
                                  error: function (data) {
+                                  console.log(data);
                                 document.getElementById("demo2").innerHTML=JSON.stringify(data.responseJSON.error);
                                  },
 
@@ -294,12 +332,13 @@
                                  },
                                  "data":{'method':e.id,'id':id,'username':uname,'first_name':fname,'last_name':lname,'email':email},
                                  success: function (data) {
+                                 console.log(data);
                                 document.getElementById("demo2").innerHTML=JSON.stringify(data);
-                                var tr = document.getElementById(`user-${data.data.id}`)
-                                tr.children[0].innerHTML = `<a href="#">${data.data.username}</a>`
-                                tr.children[1].innerText = data.data.first_name
-                                tr.children[2].innerText = data.data.last_name
-                                tr.children[3].innerText = data.data.email
+                                var tr = document.getElementById(`user-${data.id}`)
+                                tr.children[0].innerHTML = `<a href="#">${data.username}</a>`
+                                tr.children[1].innerText = data.first_name
+                                tr.children[2].innerText = data.last_name
+                                tr.children[3].innerText = data.email
                                  },
                                  error: function (data) {
                                 document.getElementById("demo2").innerHTML=JSON.stringify(data.responseJSON.detail);
@@ -346,5 +385,8 @@
                          });
             }
   </script>
+      <script>
+
+      </script>
    </body>
 </html>

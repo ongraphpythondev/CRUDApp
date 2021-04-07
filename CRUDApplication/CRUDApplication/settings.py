@@ -39,8 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+     # apps
     'Crudapp',
 
+    # third party libraries
     'rest_framework',
     'drf_api_logger'
 ]

@@ -5,49 +5,65 @@ from django.views.generic import TemplateView, View, DeleteView
 from django.core import serializers
 from django.http import JsonResponse
 from .serializers import UserSerializer,UserSerializer1
-from rest_framework import generics, status
+from rest_framework import generics, status,pagination
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+from collections import OrderedDict
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import *
+from rest_framework.exceptions import ErrorDetail
 from django.db.models import Q
 from functools import reduce
 import operator
 
+
 from drf_api_logger.models import APILogsModel
+from django.core.paginator import Paginator
 
 def index(request):
+    # load the homepage
     if request.method == 'GET':
         user=User.objects.all()
+        paginator = Paginator(user,10)
+        page_number = request.GET.get('page', 1)
+        # page_obj = paginator.get_page(page_number)
+        try:
+            user = paginator.page(page_number)
+        except PageNotAnInteger:
+            user = paginator.page(1)
+        except EmptyPage:
+            user = paginator.page(paginator.num_pages)
         return render(request, 'Crudapp/index.html',
-                      {'user':user})
+                          {'user': user, 'page': page_number})
+
+
+
 
 class Crud(generics.GenericAPIView):
     serializer_class = UserSerializer
-    def get(self, request, *args, **kwargs):
-        id=request.GET.get('id')
-        if id:
-            try:
-                user=User.objects.get(id=id)
-                return Response({
-                    "data": self.serializer_class(user).data,
-                })
-            except:
-                return Response(
-                    data={
-                        "message": "Please pass a valid id",
-                        "success": False
-                    }, status=status.HTTP_403_FORBIDDEN
-                )
-        else:
+    def post(self, request, *args):
+        # create new users
+        user_serializer = self.serializer_class(data=request.data)
+        user_serializer.is_valid()
+        errors = user_serializer.errors
+
+        user=request.data
+        if user.get('password1') != user.get('password2'):
+            error = ErrorDetail(string='The two password fields didn\'t match.', code='blank')
+            if errors.get('password2'):
+                errors['password2'].append(error)
+            else:
+                errors['password2'] = [error]
+        if errors:
             return Response(
                 data={
-                    "message": "Please pass id",
-                    "success": False
-                }, status=status.HTTP_403_FORBIDDEN
+                    "error": errors,
+                    "success": False,
+                }, status=status.HTTP_404_NOT_FOUND
             )
-    def post(self, request, *args):
-        user_serializer = self.serializer_class(data=request.data)
-        if user_serializer.is_valid():
+        else:
             user_serializer.save()
             return Response(
                 data={
@@ -56,68 +72,8 @@ class Crud(generics.GenericAPIView):
                     "success": True,
                 }, status=status.HTTP_201_CREATED
             )
-        return Response(
-            data={
-                "error":user_serializer.errors,
-                "success": False,
-            }, status=status.HTTP_404_NOT_FOUND
-        )
 
-    def put(self, request, *args):
-        try:
-            id = request.data['id']
-            snippet = self.get_object(id)
-            qs=User.objects.get(id=id)
-            serializer = UserSerializer1(snippet,data=request.data)
-            try:
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(
-                        data={
-                            "data": UserSerializer1(User.objects.get(id=id)).data,
-                            "message": "User update successfully.",
-                            "success": True,
-                        }, status=status.HTTP_200_OK
-                    )
-            except:
-                return Response(
-                    data={
-                        "message": "You didn't update any value.",
-                        "success": False,
-                    }, status=status.HTTP_404_NOT_FOUND
-                )
-        except Exception as e:
-            return Response(
-                data={
-                    "message": "Please pass a valid id",
-                    "success": False
-                }, status=status.HTTP_403_FORBIDDEN
-            )
-    def delete(self, request, *args):
 
-            id = request.data['id']
-            if id:
-                try:
-                    user = User.objects.get(id=id)
-                    user.delete()
-                    return Response(
-                        data={
-                         "message": "User deleted successfully",
-                    })
-                except:
-                    return Response(
-                        data={
-                            "message": "Please pass a valid id",
-                            "success": False
-                        }, status=status.HTTP_403_FORBIDDEN
-                    )
-            else:
-                return Response(
-                    data={
-                        "message": "Please pass id",
-                        "success": False
-                    }, status=status.HTTP_403_FORBIDDEN
-                )
 
 class UserUpdate(generics.GenericAPIView):
     serializer_class = UserSerializer
@@ -147,9 +103,28 @@ class UserUpdate(generics.GenericAPIView):
                 }, status=status.HTTP_403_FORBIDDEN
             )
 
+
+class CustomPageNumberPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'page_size'
+
+    def get_paginated_response(self, data):
+        return Response(OrderedDict([
+            ('count', self.page.paginator.count),
+            ('page_count', self.page.paginator.num_pages),
+            ('next', self.get_next_link()),
+            ('previous', self.get_previous_link()),
+            ('results', data)
+        ]))
+
+
+
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    # for Retrieve ,Update,Destroy Users
     queryset = User.objects.all()
     serializer_class = UserSerializer1
+    permission_classes = [AllowAny]
+    pagination_class = CustomPageNumberPagination
+
 
 def logs(request):
     q_list = [Q(method='PUT'), Q(method='POST'),Q(method='DELETE'),Q(method='GET')]
