@@ -23,9 +23,9 @@ pip3 install virtualenv #if using linux(for python 3 and above)
 ## Installation
 
 ```bash
-git clone https://github.com/ongraphpythondev/CRUD_Application.git
+git clone https://github.com/ongraphpythondev/CRUDApp.git
 
-cd CRUD_Application
+cd CRUDApp
 
 
 virtualenv venv
@@ -38,7 +38,6 @@ source venv/bin/activate # for linux
 
 # install required packages for the project to run
 pip install -r requirments.txt
-cd CRUDApplication
 python manage.py migrate
 ```
 
